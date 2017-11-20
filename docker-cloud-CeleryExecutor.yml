@@ -4,16 +4,17 @@ redis:
 
 postgres:
     image: postgres:9.6
+    sequential_deployment: true    
     environment:
         - POSTGRES_USER=airflow
         - POSTGRES_PASSWORD=airflow
         - POSTGRES_DB=airflow
-    sequential_deployment: true
 
 webserver:
     image: puckel/docker-airflow:1.8.2
+    sequential_deployment: true    
     restart: always
-    depends_on:
+    links:
         - postgres
         - redis
     environment:
@@ -32,7 +33,7 @@ webserver:
 flower:
     image: puckel/docker-airflow:1.8.2
     restart: always
-    depends_on:
+    links:
         - redis
     environment:
         - EXECUTOR=Celery
@@ -43,7 +44,7 @@ flower:
 scheduler:
     image: puckel/docker-airflow:1.8.2
     restart: always
-    depends_on:
+    links:
         - webserver
     # volumes:
     #     - ./dags:/usr/local/airflow/dags
