@@ -3,71 +3,86 @@ redis:
     sequential_deployment: true
 
 postgres:
-    image: postgres:9.6
-    sequential_deployment: true    
-    environment:
-        - POSTGRES_USER=airflow
-        - POSTGRES_PASSWORD=airflow
-        - POSTGRES_DB=airflow
+    image: postgres:9.6.5
+    sequential_deployment: true
+    ports:
+        - "5432"    
+    # environment:
+    #     - POSTGRES_HOST=postgres
+    #     - POSTGRES_USER=airflow
+    #     - POSTGRES_PASSWORD=airflow
+    #     - POSTGRES_DB=airflow
 
 webserver:
-    image: puckel/docker-airflow:1.8.2
+    image: andrewcstewart/docker-airflow
     sequential_deployment: true    
     restart: always
     links:
         - postgres
         - redis
+        - worker
     environment:
         - LOAD_EX=n
-        - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+        # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
         - EXECUTOR=Celery
-        - POSTGRES_USER=airflow
-        - POSTGRES_PASSWORD=airflow
-        - POSTGRES_DB=airflow
+        # - POSTGRES_HOST=postgres        
+        # - POSTGRES_USER=airflow
+        # - POSTGRES_PASSWORD=airflow
+        # - POSTGRES_DB=airflow
     # volumes:
     #     - ./dags:/usr/local/airflow/dags
     ports:
-        - "8080:8080"
+        - "8080"
     command: webserver
 
 flower:
-    image: puckel/docker-airflow:1.8.2
+    image: andrewcstewart/docker-airflow
+    sequential_deployment: true    
     restart: always
     links:
         - redis
+        - postgres
     environment:
         - EXECUTOR=Celery
     ports:
-        - "5555:5555"
+        - "5555"
     command: flower
 
 scheduler:
-    image: puckel/docker-airflow:1.8.2
+    image: andrewcstewart/docker-airflow
+    sequential_deployment: true        
     restart: always
     links:
-        - webserver
+        # - webserver
+        - postgres
+        - redis
     # volumes:
     #     - ./dags:/usr/local/airflow/dags
     environment:
         - LOAD_EX=n
-        - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+        # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
         - EXECUTOR=Celery
-        - POSTGRES_USER=airflow
-        - POSTGRES_PASSWORD=airflow
-        - POSTGRES_DB=airflow
+        # - POSTGRES_HOST=postgres
+        # - POSTGRES_USER=airflow
+        # - POSTGRES_PASSWORD=airflow
+        # - POSTGRES_DB=airflow
     command: scheduler
 
 worker:
-    image: puckel/docker-airflow:1.8.2
+    image: andrewcstewart/docker-airflow
+    sequential_deployment: true        
     restart: always
     links:
         - scheduler
+        - postgres
+        - redis
     # volumes:
     #     - ./dags:/usr/local/airflow/dags
     environment:
-        - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
+        # - FERNET_KEY=46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho=
         - EXECUTOR=Celery
-        - POSTGRES_USER=airflow
-        - POSTGRES_PASSWORD=airflow
-        - POSTGRES_DB=airflow
+        # - POSTGRES_HOST=postgres        
+        # - POSTGRES_USER=airflow
+        # - POSTGRES_PASSWORD=airflow
+        # - POSTGRES_DB=airflow
     command: worker
